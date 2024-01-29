@@ -53,9 +53,22 @@ for key, list_values in occupancy_list.items():
     n_key = [counter[i] for i in l_key]
     
     prepare_UBO[key] = {'l({})'.format(key): l_key, 'n({})'.format(key): n_key}
-    
+print(prepare_UBO)    
 for key, values in prepare_UBO.items():
-    print(f"{key}: {values}")
+    for inner_key, inner_value in values.items():
+        print(inner_key)
+    # print(f"{key}: {values}")
 
+def cal_ubo(l, n):
+    total = 0
+    for i in range(len(l)):
+        total += n[i] * l[0] / l[i]
+    return total
 
-
+def ubo_final(length, number_transaction):
+    ubo = []
+    for i in range(len(length)):
+        print(length[i:], length[i:], sep = " ")
+        ubo.append(cal_ubo(length[i:], number_transaction[i:]))
+    return ubo
+    
