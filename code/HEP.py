@@ -1,6 +1,9 @@
 import pandas as pd
 from collections import Counter
+import time
+# from data_test import *
 
+start_time = time.time()
 data = {
     'Tid': ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
     'Items': [['a', 'c', 'd'],
@@ -40,9 +43,6 @@ df_support = pd.DataFrame(support.items(), columns=['Item', 'Sup(P)'])
 
 merge_df = df_support.merge(df_occupancy, on = "Item")
 
-# for key, values in occupancy_list.items():
-#     print(f"{key}: {values}")
-
 prepare_UBO = {}
 
 for key, list_values in occupancy_list.items():
@@ -52,23 +52,31 @@ for key, list_values in occupancy_list.items():
     counter = Counter(values)
     n_key = [counter[i] for i in l_key]
     
-    prepare_UBO[key] = {'l({})'.format(key): l_key, 'n({})'.format(key): n_key}
-print(prepare_UBO)    
-for key, values in prepare_UBO.items():
-    for inner_key, inner_value in values.items():
-        print(inner_key)
-    # print(f"{key}: {values}")
+    prepare_UBO[key] = {'l({})'.format(key): l_key, 'n({})'.format(key): n_key}   
 
 def cal_ubo(l, n):
     total = 0
     for i in range(len(l)):
         total += n[i] * l[0] / l[i]
-    return total
+    return round(total, 2)
 
 def ubo_final(length, number_transaction):
     ubo = []
     for i in range(len(length)):
-        print(length[i:], length[i:], sep = " ")
         ubo.append(cal_ubo(length[i:], number_transaction[i:]))
     return ubo
+
+for key, values in prepare_UBO.items():
+    list_values = list(values.values())
+    length = list_values[0]
+    number_transaction = list_values[1]
+    print(key, length, number_transaction, sep = " - ")
+    ubo = ubo_final(length, number_transaction)
+    print(max(ubo))
+    print("---")
+    
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Execution time: {execution_time} seconds")
+
     
