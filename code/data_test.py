@@ -8,7 +8,7 @@ data = {
 
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
 
-for i in range(1, 100):
+for i in range(1, 1000):
     tid = 'T' + str(i)
     items = random.choices(list(alphabet), k=random.randint(1, 26))
     
