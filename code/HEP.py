@@ -129,6 +129,9 @@ def itemset_info(df_occupancy, df_support, df_UBO):
     
     return merge_df
 
+def intersect_occ_lists(P1, P2, occupancy_lists):
+    return occupancy_lists[P1].intersection(occupancy_lists[P2])
+
 def hep_algorithm(threshold, df, df_itemset_info):
     threshold = threshold * len(df)
     C1 = set()
@@ -145,6 +148,33 @@ def hep_algorithm(threshold, df, df_itemset_info):
                 C1.add(items)
             if occupancy >= threshold:
                 HO1.add(items)
+    # Generate Ck and HOk
+    k = 2
+    Ck_1 = C1
+    HOk = [HO1]
+    
+    while Ck_1:
+        Ck = set()
+        for P1 in Ck_1:
+            for P2 in Ck_1:
+                if len(P1.intersection(P2)) == k - 2:
+                    P = P1.union(P2)
+                    P_occupancy_list = intersect_occ_lists(P1, P2, occupancy_lists)
+                    ubo = calc_ubo(P_occupancy_list)
+                    if ubo >= threshold:
+                        Ck.add(P)
+                        if len(P_occupancy_list) >= threshold:
+                            HOk.append(P)
+        k += 1
+        Ck_1 = Ck
+    
+    # Return the set of all high occupancy itemsets
+    HO_Set = set()
+    for itemsets in HOk:
+        HO_Set.update(itemsets)
+    
+    return HO_Set            
+    
     return C1, HO1
     
 # call function
