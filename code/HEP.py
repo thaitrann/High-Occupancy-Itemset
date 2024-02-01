@@ -129,18 +129,42 @@ def itemset_info(df_occupancy, df_support, df_UBO):
     
     return merge_df
 
+def hep_algorithm(threshold, df, df_itemset_info):
+    threshold = threshold * len(df)
+    C1 = set()
+    HO1 = set()
+    
+    for index, row in df_itemset_info.iterrows():
+        items = row['Items']
+        support = row['Support']
+        occupancy = row['Occupancy']
+        max_ubo = row['Max_UBO']
+        
+        if support >= threshold:
+            if max_ubo >= threshold:
+                C1.add(items)
+            if occupancy >= threshold:
+                HO1.add(items)
+    return C1, HO1
+    
 # call function
 df_occupancy_list = df_occupancy_list(df)
 df_stset = df_stset(df_occupancy_list)
 df_support = df_support(df_stset)
 df_occupancy = df_occupancy(df_occupancy_list)
 df_UBO = df_UBO(df_occupancy_list)
+df_itemset_info = itemset_info(df_occupancy, df_support, df_UBO)
 
 # print(df_occupancy_list)
 # print(df_stset)
 # print(df_support)
 # print(df_occupancy)
 # print(df_UBO)
-print(itemset_info(df_occupancy, df_support, df_UBO))
+print(df_itemset_info)
+
+threshold = 0.25
+C1, HO1 = hep_algorithm(threshold, df, df_itemset_info)
+print("C1: ", C1)
+print("HO1: ", HO1)
 
 runtime(start_time)
