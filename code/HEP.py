@@ -21,49 +21,64 @@ df['Item_Length'] = df['Items'].apply(lambda items: len(items))
 unique_items = sorted(df['Items'].explode().unique())
 
 # calculate occupancy list
-def occupancy_list(df):
+def df_occupancy_list(df):
     occupancy_list = {}
     for item in unique_items:
         tid_list = df[df['Items'].apply(lambda items: item in items)]['Tid'].tolist()
         tid_lengths = [(tid, len(df[df['Tid'] == tid]['Items'].iloc[0])) for tid in tid_list if item in df[df['Tid'] == tid]['Items'].iloc[0]]
         occupancy_list[item] = tid_lengths
-    return occupancy_list
+    df_occupancy_list = pd.DataFrame(occupancy_list.items(), columns=['Items', 'Occupancy_list'])
+    return df_occupancy_list
 
 # calculate stset
-def stset(occupancy_list):
-    stset = {}
-    for key, values in occupancy_list.items():
-        stset[key] = [item[0] for item in values]
-    return stset
+def df_stset(df_occupancy_list):
+    df_stset = pd.DataFrame(columns=['Items', 'Occupancy'])
+
+    for index, row in df_occupancy_list.iterrows():
+        item = row['Items']
+        occupancy_list = [tid for tid, _ in row['Occupancy_list']]
+        df_stset = df_stset.append({'Items': item, 'Occupancy': occupancy_list}, ignore_index=True)
+    return df_stset
 
 # calculate support
-def support(stset):
-    support = {}
-    support = {key: len(value) for key, value in stset.items()}
-    return support
+def df_support(df_stset):
+    df_support = pd.DataFrame(columns=['Items', 'Support'])
+    df_support['Items'] = df_stset['Items']
+    df_support['Support'] = df_stset['Occupancy'].apply(len)
+    return df_support
 
 # calculate occupancy
-def occupancy(occupancy_list):
-    occupancy = {}
-    for key, values_list in occupancy_list.items():
+def df_occupancy(df_occupancy_list):
+    occupancy_data = []
+    for index, row in df_occupancy_list.iterrows():
+        item = row['Items']
+        occupancy_list = row['Occupancy_list']
         total = 0
-        for i in values_list:
-            total += len(key)/i[1]
-        occupancy[key] = round(total, 2)
-    return occupancy
+        for tid, length in occupancy_list:
+            total += len(item) / length
+        occupancy_data.append({'Items': item, 'Occupancy': round(total, 2)})
+    
+    df_occupancy = pd.DataFrame(occupancy_data)
+    
+    return df_occupancy
 
 # ex: 'a': {'l(a)': [2, 3, 5], 'n(a)': [1, 2, 1]}
-def prepare_UBO(occupancy_list):
-    UBO = {}
-    for key, list_values in occupancy_list.items():
-        values = [i[1] for i in list_values]
-        l_key = sorted(set(values))
+def df_prepare_UBO(df_occupancy_list):
+    UBO_data = []
+    for index, row in df_occupancy_list.iterrows():
+        item = row['Items']
+        occupancy_list = row['Occupancy_list']
+        
+        values = [i[1] for i in occupancy_list]
+        l_item = sorted(set(values))
     
         counter = Counter(values)
-        n_key = [counter[i] for i in l_key]
+        n_item = [counter[i] for i in l_item]
         
-        UBO[key] = {'l': l_key, 'n': n_key}
-    return UBO
+        UBO_data.append({'Items': item, 'l_item': l_item, 'n_item': n_item})
+    
+    df_UBO = pd.DataFrame(UBO_data)
+    return df_UBO
 
 # calculate according to the formula: ni x lx/li
 def cal_ubo(l, n):
@@ -78,38 +93,28 @@ def ubo_final(length, number_transaction):
     for i in range(len(length)):
         ubo.append(cal_ubo(length[i:], number_transaction[i:]))
     return ubo
-
+    
 # get max from summarize => save max value in UBO by key
-def calculate_maxUBO(UBO):
-    for key, values in UBO.items():
-        list_values = list(values.values())
+def calculate_maxUBO(df_UBO):
+    df_UBO['List_UBO'] = None
+    df_UBO['Max_UBO'] = None
+    for index, row in df_UBO.iterrows():
+        length = row['l_item']
+        number_transaction = row['n_item']
         
-        length = list_values[0]
-        number_transaction = list_values[1]
-
-        # print(key, length, number_transaction, sep = " - ")
-        ubo = max(ubo_final(length, number_transaction))
-        UBO[key]['UBO'] = [ubo]
-    return UBO
+        ubo = ubo_final(length, number_transaction)
+        max_ubo = max(ubo)
+        
+        df_UBO.at[index, 'List_UBO'] = ubo
+        df_UBO.at[index, 'Max_UBO'] = max_ubo
+        
+    return df_UBO
 
 # UBO calculation methods
-def UBO(occupancy_list):
-    UBO = prepare_UBO(occupancy_list)    
-    UBO = calculate_maxUBO(UBO)
-    return UBO
-
-# UBO result formatting
-def show_UBO(UBO):
-    for key, values in UBO.items():
-        print("Key: " + key)
-        for inner_key, inner_value in values.items():
-            if inner_key.startswith("l"):
-                print("# Different length in transactions - " + inner_key + ": " + str(inner_value))
-            elif inner_key.startswith("n"):
-                print("# Number of transactions with length - " + inner_key + ": " + str(inner_value))
-            elif inner_key.startswith("UBO"):
-                print("# Upper bound of occupancy - " + inner_key + ": " + str(inner_value))
-        print("---")
+def df_UBO(df_occupancy_list):
+    df_UBO = df_prepare_UBO(df_occupancy_list)    
+    df_UBO = calculate_maxUBO(df_UBO)
+    return df_UBO
 
 # runtime
 def runtime(start_time):
@@ -118,21 +123,24 @@ def runtime(start_time):
     print(f"Execution time: {execution_time} seconds")
 
 # the index, support, occupancy and UBO of each itemset
-def itemset_info(occupancy, support, UBO):
-    df_occupancy = pd.DataFrame(occupancy.items(), columns=['Item', 'O(P)'])
-    df_support = pd.DataFrame(support.items(), columns=['Item', 'Sup(P)'])
-    df_UBO = pd.DataFrame([(key, value['UBO'][0]) for key, value in UBO.items()], columns=['Item', 'UBO(P)'])
-    
-    merge_df = df_support.merge(df_occupancy, on = "Item").merge(df_UBO, on = "Item")
+def itemset_info(df_occupancy, df_support, df_UBO):
+    merge_df = df_support[['Items', 'Support']].merge(df_occupancy[['Items', 'Occupancy']], on = "Items").\
+        merge(df_UBO[['Items', 'Max_UBO']], on = "Items")
     
     return merge_df
 
 # call function
-occupancy_list = occupancy_list(df)
-stset = stset(occupancy_list)
-support = support(stset)
-occupancy = occupancy(occupancy_list)
-UBO = UBO(occupancy_list)
+df_occupancy_list = df_occupancy_list(df)
+df_stset = df_stset(df_occupancy_list)
+df_support = df_support(df_stset)
+df_occupancy = df_occupancy(df_occupancy_list)
+df_UBO = df_UBO(df_occupancy_list)
 
-print(itemset_info(occupancy, support, UBO))
+# print(df_occupancy_list)
+# print(df_stset)
+# print(df_support)
+# print(df_occupancy)
+# print(df_UBO)
+print(itemset_info(df_occupancy, df_support, df_UBO))
+
 runtime(start_time)
