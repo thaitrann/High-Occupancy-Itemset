@@ -21,7 +21,7 @@ df['Item_Length'] = df['Items'].apply(lambda items: len(items))
 unique_items = sorted(df['Items'].explode().unique())
 
 # calculate occupancy list
-def df_occupancy_list(df):
+def occupancy_list(df):
     occupancy_list = {}
     for item in unique_items:
         tid_list = df[df['Items'].apply(lambda items: item in items)]['Tid'].tolist()
@@ -31,7 +31,7 @@ def df_occupancy_list(df):
     return df_occupancy_list
 
 # calculate stset
-def df_stset(df_occupancy_list):
+def stset(df_occupancy_list):
     df_stset = pd.DataFrame(columns=['Items', 'Occupancy'])
 
     for index, row in df_occupancy_list.iterrows():
@@ -41,14 +41,14 @@ def df_stset(df_occupancy_list):
     return df_stset
 
 # calculate support
-def df_support(df_stset):
+def support(df_stset):
     df_support = pd.DataFrame(columns=['Items', 'Support'])
     df_support['Items'] = df_stset['Items']
     df_support['Support'] = df_stset['Occupancy'].apply(len)
     return df_support
 
 # calculate occupancy
-def df_occupancy(df_occupancy_list):
+def occupancy(df_occupancy_list):
     occupancy_data = []
     for index, row in df_occupancy_list.iterrows():
         item = row['Items']
@@ -111,7 +111,7 @@ def calculate_maxUBO(df_UBO):
     return df_UBO
 
 # UBO calculation methods
-def df_UBO(df_occupancy_list):
+def UBO(df_occupancy_list):
     df_UBO = df_prepare_UBO(df_occupancy_list)    
     df_UBO = calculate_maxUBO(df_UBO)
     return df_UBO
@@ -129,10 +129,19 @@ def itemset_info(df_occupancy, df_support, df_UBO):
     
     return merge_df
 
-def intersect_occ_lists(P1, P2, occupancy_lists):
-    return occupancy_lists[P1].intersection(occupancy_lists[P2])
+def df_intersection(items1, items2, df_occupancy_list):
+    df = pd.DataFrame(columns=['Items', 'Occupancy_list'])
+    list1 = df_occupancy_list.loc[df_occupancy_list['Items'] == items1, 'Occupancy_list'].iloc[0]
+    list2 = df_occupancy_list.loc[df_occupancy_list['Items'] == items2, 'Occupancy_list'].iloc[0]
+    
+    intersection_list = list(set(list1) & set(list2))
+    intersection_list = sorted(intersection_list, key = lambda x: x[0])
+    intersection_items = items1 + items2
 
-def hep_algorithm(threshold, df, df_itemset_info):
+    df = df.append({'Items': intersection_items, 'Occupancy_list': intersection_list}, ignore_index=True)
+    return df
+
+def hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list):
     threshold = threshold * len(df)
     C1 = set()
     HO1 = set()
@@ -145,9 +154,14 @@ def hep_algorithm(threshold, df, df_itemset_info):
         
         if support >= threshold:
             if max_ubo >= threshold:
-                C1.add(items)
+                C1.add(frozenset(items))
+                # C1.add(items)
             if occupancy >= threshold:
-                HO1.add(items)
+                HO1.add(frozenset(items))
+                # HO1.add(items)
+
+    # return C1, HO1
+    
     # Generate Ck and HOk
     k = 2
     Ck_1 = C1
@@ -157,10 +171,10 @@ def hep_algorithm(threshold, df, df_itemset_info):
         Ck = set()
         for P1 in Ck_1:
             for P2 in Ck_1:
-                if len(P1.intersection(P2)) == k - 2:
-                    P = P1.union(P2)
-                    P_occupancy_list = intersect_occ_lists(P1, P2, occupancy_lists)
-                    ubo = calc_ubo(P_occupancy_list)
+                if len(set(P1).intersection(set(P2))) == k - 2:
+                    P = frozenset([P1, P2])
+                    P_occupancy_list = df_intersection(P1, P2, df_occupancy_list)
+                    ubo = UBO(P_occupancy_list)['Max_UBO'].iloc[0]
                     if ubo >= threshold:
                         Ck.add(P)
                         if len(P_occupancy_list) >= threshold:
@@ -175,14 +189,12 @@ def hep_algorithm(threshold, df, df_itemset_info):
     
     return HO_Set            
     
-    return C1, HO1
-    
 # call function
-df_occupancy_list = df_occupancy_list(df)
-df_stset = df_stset(df_occupancy_list)
-df_support = df_support(df_stset)
-df_occupancy = df_occupancy(df_occupancy_list)
-df_UBO = df_UBO(df_occupancy_list)
+df_occupancy_list = occupancy_list(df)
+df_stset = stset(df_occupancy_list)
+df_support = support(df_stset)
+df_occupancy = occupancy(df_occupancy_list)
+df_UBO = UBO(df_occupancy_list)
 df_itemset_info = itemset_info(df_occupancy, df_support, df_UBO)
 
 # print(df_occupancy_list)
@@ -190,11 +202,25 @@ df_itemset_info = itemset_info(df_occupancy, df_support, df_UBO)
 # print(df_support)
 # print(df_occupancy)
 # print(df_UBO)
-print(df_itemset_info)
+print(df_occupancy_list)
 
 threshold = 0.25
-C1, HO1 = hep_algorithm(threshold, df, df_itemset_info)
-print("C1: ", C1)
-print("HO1: ", HO1)
+HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
+print(HO_Set)
+
+# C1, HO1 = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
+# print(C1)
+
+# C1 = {'a', 'd', 'c', 'e', 'b'}
+
+# ck = set()
+
+# for i in C1:
+#     for j in C1:
+#         p = set(i).union(set(j))
+#         print(p)
+# #         ck.add(p)
+# # print(ck)
 
 runtime(start_time)
+
