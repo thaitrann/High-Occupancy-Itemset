@@ -149,8 +149,11 @@ def itemset_info(df_occupancy, df_support, df_UBO):
 
 def df_intersection(items1, items2, df_occupancy_list):    
     df = pd.DataFrame(columns=['Items', 'Occupancy_list'])
-    list_1_item = sorted(list(set(list(items1) + list(items2))))
-    intersection_items = ''.join(list_1_item)
+    set1 = set(items1.split("|"))
+    set2 = set(items2.split("|"))
+    list_1_item = sorted(list(set1 | set2))
+    intersection_items = '|'.join(list_1_item)
+    
     list_occupancy_1_item = []
     
     for i in list_1_item:
@@ -163,7 +166,8 @@ def df_intersection(items1, items2, df_occupancy_list):
     intersection_list = sorted(intersection, key = lambda x: x[0])
     
     df = df.append({'Items': intersection_items, 'Occupancy_list': intersection_list}, ignore_index=True)
-    return intersection_items
+
+    return df
 
 def hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list):
     threshold = threshold * len(df) # ex: threshold = 25% of len(database)
@@ -199,6 +203,7 @@ def hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list):
                     # P = set(set(P1).union(set(P2)))
                     P_occupancy_list = df_intersection(Ck_1[i], Ck_1[j], df_occupancy_list)
                     p_items = P_occupancy_list['Items'].iloc[0]
+                    
                     if p_items in HOk:
                         continue
                     else:
@@ -210,7 +215,7 @@ def hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list):
                                 HOk.append(p_items)
         k += 1
         Ck_1 = list(set(Ck))
-        break
+        
     # Return the set of all high occupancy itemsets
     HO_Set = []
     for itemsets in HOk:
@@ -233,13 +238,19 @@ df_itemset_info = itemset_info(df_occupancy, df_support, df_UBO)
 # print(df_UBO)
 
 threshold = 0.25
-# HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
-# print(HO_Set)
+HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
+print(HO_Set)
 
 runtime(start_time)
 
-items1 = 'a'
-items2 = 'b'
-test = (items1, items2, df_occupancy_list)
+# items1 = 'f'
+# items2 = ['d', 'a|b', 'a|c', 'a|d', 'b|d', 'c|d', 'c|e', 'd|e', 'b|c|d|e', 'b|c|d|e', 'b|c|d|e']
+# list = []
+# for i in items2:
+#     if items1 == i:
+#         list.append(i)
+# print(list)
+    
 
-print(test)
+
+
