@@ -203,16 +203,16 @@ def hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list):
                     # P = set(set(P1).union(set(P2)))
                     P_occupancy_list = df_intersection(Ck_1[i], Ck_1[j], df_occupancy_list)
                     p_items = P_occupancy_list['Items'].iloc[0]
-                    
-                    if p_items in HOk:
-                        continue
-                    else:
-                        p_ubo = cal_UBO(P_occupancy_list)['Max_UBO'].iloc[0]
-                        p_occupancy = cal_occupancy(P_occupancy_list)['Occupancy'].iloc[0]
-                        if p_ubo >= threshold:
-                            Ck.append(p_items)
-                            if p_occupancy >= threshold:
-                                HOk.append(p_items)
+                    # if p_items in HOk:
+                    #     print(p_items)
+                    #     continue
+                    # else:
+                    p_ubo = cal_UBO(P_occupancy_list)['Max_UBO'].iloc[0]
+                    p_occupancy = cal_occupancy(P_occupancy_list)['Occupancy'].iloc[0]
+                    if p_ubo >= threshold:
+                        Ck.append(p_items)
+                        if p_occupancy >= threshold:
+                            HOk.append(p_items)
         k += 1
         Ck_1 = list(set(Ck))
         
@@ -238,19 +238,7 @@ df_itemset_info = itemset_info(df_occupancy, df_support, df_UBO)
 # print(df_UBO)
 
 threshold = 0.25
-HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
-print(HO_Set)
+# HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
+# print(HO_Set)
 
 runtime(start_time)
-
-# items1 = 'f'
-# items2 = ['d', 'a|b', 'a|c', 'a|d', 'b|d', 'c|d', 'c|e', 'd|e', 'b|c|d|e', 'b|c|d|e', 'b|c|d|e']
-# list = []
-# for i in items2:
-#     if items1 == i:
-#         list.append(i)
-# print(list)
-    
-
-
-
