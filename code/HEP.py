@@ -65,7 +65,7 @@ def cal_support(df_stset):
 def cal_occupancy(df_occupancy_list):
     occupancy_data = []
     for index, row in df_occupancy_list.iterrows():
-        item = row['Items'] 
+        item = row['Items'].split("|")[0]
         occupancy_list = row['Occupancy_list']
         total = 0
         for tid, length in occupancy_list:
@@ -238,7 +238,7 @@ df_itemset_info = itemset_info(df_occupancy, df_support, df_UBO)
 # print(df_UBO)
 
 threshold = 0.25
-# HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
-# print(HO_Set)
+HO_Set = hep_algorithm(threshold, df, df_itemset_info, df_occupancy_list)
+print(HO_Set)
 
 runtime(start_time)

@@ -14,13 +14,5 @@ df['Items'] = df['Items'].apply(lambda x: list(map(int, x.split())))
 df['Tid'] = list(map(lambda x: 'T' + str(x), range(1, len(df) + 1)))
 df['Items'] = df['Items'].apply(lambda x: [str(item).strip(" ") for item in x])
 # Hiển thị DataFrame
+df = df.head(100)
 print(df)
-
-# Chuyển các danh sách thành các hàng đơn lẻ
-df_exploded = df.explode('Items')
-
-# Lấy các giá trị phân biệt trong cột "Items"
-unique_values = df_exploded['Items'].unique()
-
-# Hiển thị các giá trị phân biệt
-print(len(unique_values))
