@@ -14,5 +14,5 @@ df['Items'] = df['Items'].apply(lambda x: list(map(int, x.split())))
 df['Tid'] = list(map(lambda x: 'T' + str(x), range(1, len(df) + 1)))
 df['Items'] = df['Items'].apply(lambda x: [str(item).strip(" ") for item in x])
 # Hiển thị DataFrame
-df = df.head(100)
+df = df.head(10)
 print(df)
