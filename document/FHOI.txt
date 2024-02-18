@@ -1,0 +1,51 @@
+Dưới đây là mã giả đã được định dạng lại để dễ đọc hơn:
+
+1. Scan D để tạo tập S các 1-itemset, chỉ mục độ dài L và tidset của mỗi 1-itemset, xác định xem D có cùng độ dài không (hastheSameLengh).
+2. HOIS ← rỗng
+3. C1 ← rỗng; HOI1 ← rỗng;
+4. {C1, HOI1} ← Mine-HOI-KItemset(S);
+5. HOlS ← HOIS U HOI1;
+6. k ← 2;
+	7. Trong khi (CK-1 ≠ rỗng) làm
+	8. (CK, HOIK) ← Mine-HOI-KItemset(CK-1);
+	9. HOIS ← HOIS U HOIK;
+	10. k += 1;
+11. Trả về HOIS;
+
+
+Mine-HOI-Itemset(S)
+12. Với mỗi 1-itemset P trong S làm
+	13. Nếu Sup(P) >= threshold thì
+		14. Nếu hastheSameLengh = False thì
+			15. Scan P.STSet để tính UBO(P) dựa trên L;
+			16. Nếu UBO(P) >= threshold thì
+				17. C1 ← C1 ∪ {P}
+				18. Nếu O(P) ≥ threshold thì
+					19. HO1 ← HO1 ∪ {P};
+		20. Ngược lại
+			21. C1 ← C1 ∪ {P}
+			22. Nếu O(P) ≥ threshold thì
+				23. HO1 ← HO1 ∪ {P};
+24. Trả về {C1, HO1};
+
+
+Mine-HOI-KItemset(CK-1)
+25. CK ← rỗng; // Từ điển của EquivalenceClass và danh sách các ứng cử viên
+26. HOK ← rỗng;
+27. Trong khi len(CK-1) > 0 làm
+	28. P1 = CK-1[0];
+	29. Với mỗi itemset P2 trong CK-1 làm
+		30. Nếu IsSameEquivalenceClass(P1, P2) thì
+			31. P ← P1 ∪ P2;
+			32. P.STSet ← P1.STSet ∩ P2.STSet;
+			33. Nếu len(P.STSet) >= threshold thì
+				34. Nếu hastheSameLengh = False thì
+					35. Scan P.STSet để tính UBO(P) dựa trên P.STSet;
+					36. Nếu UBO(P) ≥ threshold
+							37. PTMP ← {P0, P1,...PLength-1)
+							38. CK ← CK ∪ {P} & IndexEquivalenceClass(P, PTMP);
+					39. Ngược lại
+						40. CK ← CK ∪ {P} 
+	41. CK-1 ← CK-1 \ {CK-1[0]};
+42. HOK ← {P | P ∈ CK ∧ O(P) ≥ threshold};
+43. Trả về {CK, HOK};

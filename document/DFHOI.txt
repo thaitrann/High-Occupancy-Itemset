@@ -1,0 +1,27 @@
+
+1. Quét D để tạo ra tập hợp 1-itemset S, với chỉ mục có độ dài L và tập tidset của mỗi 1-itemset, và xác định xem D có cùng độ dài hay không (hasthe SameLength).
+
+2. HOIS ← rỗng
+3. C1 ← rỗng; HOI1 ← rỗng;
+4. {C1, HOI1} ← Mine-HOI-1Itemset(S)
+5. HOIS ← HOIS ∪ HOI1
+6. Nếu C1 != rỗng thì
+	7. HOIS ← HOIS U Mine-Depth-HOls(C1)
+8. Trả về HOls
+
+
+Mine-Depth-HOIs(C)
+9. Đối với mỗi itemset P1 trong C do
+	10. Cl ← 0;
+	11. Đối với mỗi itemset P2 trong C theo sau P1
+		12. P ← P1 ∪ P2;
+		13. P.STSet ← P1.STSet ∪ P2.STSet;
+		14. Nếu len(P.STSet) ≥ threshold 
+			15. Nếu hastheSameLengh = False
+				16. Quét P.STSet để tính toán UBO(P) dựa trên L;
+				17. Nếu UBO(P) ≥ threshold thì
+					18. Cl ← Cl ∪ {P};
+			19. Ngược lại
+				20. Cl ← Cl ∪ {P};
+	21. Mine-Depth-HOIs(G);
+	22. HOIs ← HOIs U {P | P ∈ C₁ và O(P) ≥ ξ};
