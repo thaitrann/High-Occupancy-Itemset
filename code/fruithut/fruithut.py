@@ -10,5 +10,6 @@ with open(r'E:\MyDesktop\ThaiTran\Personal_Project\High-Occupancy-Itemset\code\f
 
 df = pd.DataFrame(data, columns=['Tid', 'Items'])
 # df = df.head(10000)
-print(len(df))
+if __name__ == "__main__":
+    print(df)
 # df.to_csv(r'E:\MyDesktop\ThaiTran\Personal_Project\High-Occupancy-Itemset\code\fruithut.csv')
